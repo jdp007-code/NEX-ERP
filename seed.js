@@ -1,0 +1,16 @@
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import fs from "fs";
+dotenv.config();
+const uri=process.env.MONGO_URI||"mongodb://127.0.0.1:27017/small_business_erp";
+const User=mongoose.model("User",new mongoose.Schema({name:String,email:{type:String,unique:true},password:String,role:String,active:Boolean},{timestamps:true}));
+const Product=mongoose.model("Product",new mongoose.Schema({sku:String,name:String,category:String,unit:String,sellingPrice:Number,purchasePrice:Number,gstRate:Number,stock:Number,reorderLevel:Number,warehouse:String},{timestamps:true}));
+const Customer=mongoose.model("Customer",new mongoose.Schema({name:String,email:String,phone:String,company:String,address:String,status:String},{timestamps:true}));
+const Supplier=mongoose.model("Supplier",new mongoose.Schema({name:String,email:String,phone:String,company:String,address:String,status:String},{timestamps:true}));
+await mongoose.connect(uri);
+const hash=await bcrypt.hash("admin123",10);await User.updateOne({email:"admin@example.com"},{$set:{name:"System Administrator",email:"admin@example.com",password:hash,role:"admin",active:true}},{upsert:true});
+const products=[{sku:"SKU-1001",name:"Office Chair",category:"Furniture",unit:"pcs",sellingPrice:6500,purchasePrice:4800,gstRate:18,stock:25,reorderLevel:5,warehouse:"Main Warehouse"},{sku:"SKU-1002",name:"Laptop Stand",category:"Accessories",unit:"pcs",sellingPrice:1800,purchasePrice:1100,gstRate:18,stock:50,reorderLevel:10,warehouse:"Main Warehouse"},{sku:"SKU-1003",name:"Packing Box",category:"Packaging",unit:"pcs",sellingPrice:80,purchasePrice:45,gstRate:12,stock:150,reorderLevel:30,warehouse:"Main Warehouse"}];for(const p of products)await Product.updateOne({sku:p.sku},{$set:p},{upsert:true});
+const customers=[{name:"Rahul Traders",email:"rahul@example.com",phone:"9876543210",company:"Rahul Traders",address:"Ahmedabad",status:"Active"},{name:"Bright Retail",email:"sales@bright.example",phone:"9876500000",company:"Bright Retail",address:"Surat",status:"Active"}];for(const c of customers)await Customer.updateOne({email:c.email},{$set:c},{upsert:true});
+const suppliers=[{name:"Prime Supplies",email:"prime@example.com",phone:"9876501111",company:"Prime Supplies",address:"Ahmedabad",status:"Active"},{name:"Metro Components",email:"metro@example.com",phone:"9876502222",company:"Metro Components",address:"Vadodara",status:"Active"}];for(const s of suppliers)await Supplier.updateOne({email:s.email},{$set:s},{upsert:true});
+console.log("Seed complete. Admin: admin@example.com / admin123");await mongoose.disconnect();
